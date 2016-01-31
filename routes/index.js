@@ -1,19 +1,25 @@
 var express = require('express');
 var router = express.Router();
 var Product = require('../models/product.js');
+var Charge = require('../models/charge.js');
 
 var templateProps = { title: 'School of Knife Throwing' };
 
 router.get('/', function(req, res, next) {
   if (req.session && req.session.userid) {
-  	templateProps.email = req.session.email;
-    Product.find({}, function(err, products) {
-        console.log(products.length);
+    templateProps.email = req.session.email;
+    Product.find({}, 'name description amount', function(err, products) {
       templateProps.products = products;
-      return res.render('account', templateProps);
+      Charge.find({ user: req.session.userid }).populate('product')
+      .exec(function(err, charges) {
+        templateProps.charges = charges;
+        res.render('account', templateProps);
+      });
     });
   }
-  res.render('signup', templateProps);
+  else {
+    res.render('signup', templateProps);
+  }
 });
 
 router.get('/login', function(req, res, next) {
@@ -27,11 +33,14 @@ router.get('/logout', function(req, res, next) {
 })
 
 router.post('/purchase', function(req, res, next) {
-  Product.findById(req.body.id, function(err, product) {
-    product.purchase(req.body.token, function(err, charge){
-      if (err) { res.send(500, err); }
-      res.send(204, charge);
-    });
+  Product.findById(req.body._id, function(err, product) {
+    if (!err && product) {
+      product.purchase(req.body.stripeToken, req.session.userid, function(err, charge){
+        if (err) { templateProps.message = err.message; }
+        else { templateProps.message = 'Purchased! We\'ll email you the PDF shortly'; }
+        res.render('account', templateProps);
+      });
+    }
   });
 });
 

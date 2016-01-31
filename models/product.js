@@ -2,6 +2,8 @@ var mongoose = require('mongoose');
 var validate = require('mongoose-validator');
 var Schema = mongoose.Schema;
 var stripe = require('stripe')(process.env.STRIPE_KEY);
+var Charge = require('./charge.js');
+
 
 // Product validators
 var nameValidator = [
@@ -36,13 +38,24 @@ var productSchema = new Schema({
   updated_at: Date
 });
 
-productSchema.methods.purchase = function(token, cb) {
+productSchema.methods.purchase = function(token, user_id, cb) {
+  var self = this;
   stripe.charges.create({
     source: token,
     currency: this.currency,
     amount: this.amount,
 	description: this.description
-  }, cb);
+  }, function(err, charge) {
+    if (err) { return cb(err); }
+    var charge = new Charge({
+      stripe_token: token,
+      product: self._id,
+      user: user_id
+    });
+    charge.save(function(err) {
+      cb(err, charge);
+    });
+  });
 };
 
 module.exports = mongoose.model('Product', productSchema);
