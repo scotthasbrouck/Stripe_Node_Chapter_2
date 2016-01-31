@@ -16,6 +16,11 @@ var app = express();
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/stripe-node');
 
+// Seed the database
+if (process.env.NODE_ENV === 'development') {
+  require('./models/seeds/product.js')();
+}
+
 // Passportjs authentication and session
 // WARNING: For security, generate a key and save as an environment variable in production
 // For example:

@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var validate = require('mongoose-validator');
 var Schema = mongoose.Schema;
-var stripe = require('stripe');
+var stripe = require('stripe')(process.env.STRIPE_KEY);
 
 // Product validators
 var nameValidator = [
@@ -20,7 +20,7 @@ var descriptionValidator = [
 ];
 var urlValidator = [
   validate({
-    vallidator: 'isURL',
+    validator: 'isURL',
 	arguments: [{ protocols: ['https'] }],
 
   })
@@ -30,11 +30,19 @@ var productSchema = new Schema({
   name: { type: String, validate: nameValidator },
   description: { type: String, validate: descriptionValidator },
   downloadURL: { type: String, validate: urlValidator },
-  price: { type: Number, min: 50, max: 10000 },
+  amount: { type: Number, min: 50, max: 10000 },
+  currency: { type: String, default: 'USD' },
   created_at: Date,
   updated_at: Date
 });
 
-productSchema.methods.purchase = function() {
-  // Make stripe purchase here based on price of Product
+productSchema.methods.purchase = function(token, cb) {
+  stripe.charges.create({
+    source: token,
+    currency: this.currency,
+    amount: this.amount,
+	description: this.description
+  }, cb);
 };
+
+module.exports = mongoose.model('Product', productSchema);
