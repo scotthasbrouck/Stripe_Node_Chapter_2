@@ -6,7 +6,7 @@ var sampleProduct = function() {
 	  var instructionalPDF = new Product({
 		name: 'How To Buy A Throwing Knife',
 		description: 'A Step-By-Step Guide for picking out the perfect throwing knife!',
-		downloadURL: 'https://learnyouknifethrowing.com/HowToBuyAKnife.pdf',
+		downloadURL: '/downloads/HowToBuyAKnife.pdf',
 		amount: 2000,
 		currency: 'USD',
 	  });

@@ -13,14 +13,11 @@ block append content
           h3 #{product.name}
           p #{product.description}
         td
-          h3 #{'$' + (product.amount / 100).toFixed(2)}
-          form(action='/purchase', method='POST')
-            input(type='hidden', name='_id', value=product._id)
-            script(src='https://checkout.stripe.com/checkout.js', class='stripe-button', data-key='pk_test_kj6N1EAvgGa9zUq9TwmhT6LO', data-amount=product.amount, data-email=email)
-  h2 Past Charges
-  hr
-  table
-    for charge in charges
-      tr
-        td
-          h3 #{charge}
+          if product.amount
+            h3 #{'$' + (product.amount / 100).toFixed(2)}
+            form(action='/purchase', method='POST')
+              input(type='hidden', name='_id', value=product._id)
+              script(src='https://checkout.stripe.com/checkout.js', class='stripe-button', data-key='pk_test_kj6N1EAvgGa9zUq9TwmhT6LO', data-amount=product.amount, data-email=email)
+          else
+            h3 Purchased!
+            a(href=product.downloadURL) Download Here

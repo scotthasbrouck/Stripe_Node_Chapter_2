@@ -8,11 +8,20 @@ var templateProps = { title: 'School of Knife Throwing' };
 router.get('/', function(req, res, next) {
   if (req.session && req.session.userid) {
     templateProps.email = req.session.email;
-    Product.find({}, 'name description amount', function(err, products) {
-      templateProps.products = products;
-      Charge.find({ user: req.session.userid }).populate('product')
+    Product.find({}, 'name description amount downloadURL', function(err, products) {
+      Charge.find({ user: req.session.userid })
       .exec(function(err, charges) {
-        templateProps.charges = charges;
+        for (productIndex in products) {
+          for (chargeIndex in charges) {
+            if (JSON.stringify(charges[chargeIndex].product) === JSON.stringify(products[productIndex]._id)) {
+              products[productIndex].amount = null;
+            }
+            else {
+              products[productIndex].downloadURL = null;
+            }
+          }
+        }
+        templateProps.products = products;
         res.render('account', templateProps);
       });
     });
@@ -36,9 +45,11 @@ router.post('/purchase', function(req, res, next) {
   Product.findById(req.body._id, function(err, product) {
     if (!err && product) {
       product.purchase(req.body.stripeToken, req.session.userid, function(err, charge){
-        if (err) { templateProps.message = err.message; }
-        else { templateProps.message = 'Purchased! We\'ll email you the PDF shortly'; }
-        res.render('account', templateProps);
+        if (err) {
+            templateProps.message = err.message;
+            res.render('account', templateProps);
+        }
+        else { res.redirect('/');}
       });
     }
   });
