@@ -34,7 +34,9 @@ var userSchema = new Schema({
 
 // hash the password with bcrypt before writing to the database
 userSchema.pre('save', function(next) {
-  if (!this.isModified('password')) { this.password = bcrypt.hashSync(this.password, 10); }
+    console.log(this);
+  if (this.isModified('password')) { this.password = bcrypt.hashSync(this.password, 10); }
+  console.log(this);
   next();
 });
 
